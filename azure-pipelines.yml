@@ -39,4 +39,3 @@ steps:
     azureResourceGroup: 'Trasoto'
     kubernetesCluster: 'Cst-Kubernetes'
     namespace: 'PipeKub'
-    manifests: 'package.json'
