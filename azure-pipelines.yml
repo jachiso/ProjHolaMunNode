@@ -1,21 +1,46 @@
-# Node.js
-# Build a general Node.js project with npm.
-# Add steps that analyze code, save build artifacts, deploy, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/languages/javascript
-
 trigger:
-- main
-
+- master
+ 
 pool:
   vmImage: ubuntu-latest
-
+ 
 steps:
 - task: NodeTool@0
   inputs:
-    versionSpec: '10.x'
+    versionSpec: '16.x'
   displayName: 'Install Node.js'
-
+ 
 - script: |
     npm install
-    npm run build
-  displayName: 'npm install and build'
+  displayName: 'npm install'
+  
+- script: |
+     npm run build
+  displayName: npm run build
+ 
+- task: CopyFiles@2
+  inputs:
+    Contents: 'build/**'
+    TargetFolder: '$(Build.ArtifactStagingDirectory)'
+ 
+- task: ArchiveFiles@2
+  inputs:
+    rootFolderOrFile: '$(Build.ArtifactStagingDirectory)'
+    includeRootFolder: true
+    archiveType: zip
+    archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+    replaceExistingArchive: true
+ 
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    ArtifactName: 'drop'
+- task: KubernetesManifest@1
+  inputs:
+    action: 'deploy'
+    connectionType: 'azureResourceManager'
+    azureSubscriptionConnection: 'Azure subscription 1(884d97f3-7eb6-4ced-9f50-11e29660e66a)'
+    azureResourceGroup: 'Trasoto'
+    kubernetesCluster: 'Cst-Kubernetes'
+    namespace: 'PipeKub'
+    manifests: 'package.json'
